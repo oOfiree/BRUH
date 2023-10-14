@@ -1,0 +1,200 @@
+from pygame import *
+from random import *
+#from time import*
+
+#ВСЕ ЧТО СВЯЗАНО С ОТРИСОВКОЙ ФОНА
+font.init()
+counts = 0
+counts_lose = 0
+
+x_tap =0
+y_tap = 0
+font = font.SysFont("Arial",70)
+
+win = font.render(
+    "YOU WIN!",True, (255,215,0)
+)
+lost = font.render(
+    "YOU LOSE!",True, (255,0,0)
+)
+
+count = font.render(
+    "Счет:"+ str(counts) , True, (255,255,255)
+
+)
+count_lose = font.render(
+    "Пропущено:" + str(counts_lose), True, (255,255,255)
+    
+)
+###########################################
+
+
+#КЛАССЫ ГРУППЫ
+
+monsters = sprite.Group()
+
+
+class GameSprite(sprite.Sprite):
+    def __init__(self, image_name , x , y, speed, width , height,hp ):
+        super().__init__()
+        self.hp = hp
+        self.speed = speed
+        self.image = transform.scale(
+        image.load(image_name),
+        (width,height))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y 
+    def reset(self): 
+        window.blit(self.image, (self.rect.x, self.rect.y))
+class Player(GameSprite):
+    def update(self):
+        keys_pressed = key.get_pressed()
+        if keys_pressed[K_a] and self.rect.x > 10 :
+            self.rect.x -= self.speed
+        elif keys_pressed[K_d] and self.rect.x < 690 :
+            self.rect.x += self.speed
+    #def fire(self):
+    #    global x_tap
+    #    global y_tap
+    #    for event in pygame.event.get():
+    #        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+    #            x_tap,y_tap = event.pos
+                
+                    
+
+class Enemy(GameSprite):
+    def update(self):
+        global counts_lose
+        self.rect.x -= self.speed
+        if self.rect.x <200:
+            self.rect.x =800
+            self.rect.y = randint(400,600)
+            
+            counts_lose +=1
+    def die(self):
+            #self.hp -= 1
+            #if self.hp <= 0:
+            self.kill()
+
+#ОКНО ОТРИСОВКА тоесть сам визуал       
+     
+window = display.set_mode((1200,675))
+display.set_caption("Шутер")
+background = transform.scale(image.load("fon.jpg"),(1200,675))
+game  = True
+finish = False
+mixer.init()
+#mixer.music.load("space.ogg")
+#mixer.music.play()
+clock = time.Clock()
+FPS = 60
+#  image_name , x , y, speed, width , height,hp 
+sprite1 = Player("myzhik.png",50,400,0,50,80,100)
+############################################
+#for event in pygame.event.get():
+#        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+#            x,y = event.pos
+#создание врагов
+
+for i in range(2):
+    q = randint(1,3)
+    #  image_name , x , y, speed, width , height,hp 
+    if q == 1:                                       
+        monster = Enemy("bot1.png",750,randint(400,600),1,50,50,3)    
+    elif q ==2:
+        monster = Enemy("bot2.png",750,randint(400,600),2,70,70,5)
+    elif q ==3:
+        monster = Enemy("bot3.png",750,randint(400,600),3,100,100,7)
+    
+    monsters.add(monster)
+#ИГРА 
+#t_start = time()
+while  game:
+    for e in event.get():
+        if e.type == QUIT:
+            game = False
+
+    if not finish:
+        #t_2= time()
+        #t_true =round(t2- t1,0)
+
+        window.blit(background,(0,0))
+    
+        count = font.render(
+        "Счет:"+ str(counts) , True, (255,255,255)
+
+        )
+        count_lose = font.render(
+        "Пропущено:" + str(counts_lose), True, (255,255,255)
+    
+        )
+        window.blit(count,(0,0))
+        window.blit(count_lose,(0,50))
+
+
+        sprite1.reset()
+        monsters.draw(window)
+        
+    
+        MyCurrent_Time = 0
+        button_pressTime = 0
+        button_pressTime = time.get_ticks()
+         
+
+   
+        sprite1.update()
+        monsters.update()
+        for e in event.get():
+            if e.type == MOUSEBUTTONDOWN and e.button == 1:
+                x_tap,y_tap = e.pos
+                button_pressTime = time.get_ticks()
+                strelyalka = Player("vistrel.png",100,443,0,30,15,0)
+                strelyalka.reset()
+                babax = Player("vzriv.png",x_tap-25,y_tap-25,0,50,50,0)
+                babax.reset()
+                for monster in monsters:
+                    if babax.rect.x ==  monster.rect.x and babax.rect.y ==  monster.rect.y:
+                        monster.kill()
+                MyCurrent_Time = time.get_ticks()
+                if MyCurrent_Time - button_pressTime > 2000:
+                    strelyalka.die()
+                    babax.die()
+                    monster.kill()
+                print(x_tap,y_tap)
+        
+                
+        #for monster in monsters:
+        #    monster.die()
+            
+       
+        
+        
+        if len(monsters) <2:
+            q = randint(1,3)
+            if q == 1:                                       
+                monster = Enemy("bot1.png",750,randint(400,600),1,50,50,3)    
+            elif q ==2:
+                monster = Enemy("bot2.png",750,randint(400,600),2,70,70,5)
+            elif q ==3:
+                monster = Enemy("bot3.png",750,randint(400,600),3,100,100,7)
+    
+            monsters.add(monster)
+        
+
+
+        if counts_lose >=100:
+            window.blit(lost, (200,200))
+            finish = True
+        #for monster in monsters:
+        #    b = randint(1,2)
+        #    if b ==1:
+        #        monster.kill()
+
+     
+    for e in event.get():
+        if e.type == QUIT:
+            game = False
+
+    clock.tick(FPS)
+    display.update()
